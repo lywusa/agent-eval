@@ -1,0 +1,92 @@
+\documentclass[10pt]{article}
+\usepackage[letterpaper,margin=0.75in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{nosep,leftmargin=1.2em}
+\titlespacing*{\section}{0pt}{5pt}{2pt}
+\titlespacing*{\subsection}{0pt}{4pt}{2pt}
+\titleformat{\section}{\normalsize\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\setlength{\parskip}{1pt}
+\setlength{\parindent}{0pt}
+
+\newcommand{\limn}{\textit{Limitation:}~}
+
+\begin{document}
+
+\begin{center}
+{\large\bfseries Does the Final Answer Measure the Agent? Outcome-Only vs.\ Trajectory-Aware\\[1pt] vs.\ Human Evaluation of a Research-Assistant Agent}\\[4pt]
+CS 6180 Foundations of Generative AI (Fall 2026) --- Project Proposal\\[2pt]
+\textbf{Team member:} \textit{[Student Name]} (individual project)
+\end{center}
+
+\section{Introduction}
+
+\textbf{Problem.} LLM agents that answer questions by searching, reading and reasoning over several steps are usually scored on one thing: whether the final answer matches a reference (exact match, F1, or an LLM judge). This project measures \emph{how much} that outcome-only score disagrees with two other ways of evaluating the same runs: trajectory-aware metrics, which score the search-and-read process itself, and human judgment of the trajectory. It also measures whether the disagreement changes decisions that people make from benchmark numbers, such as which model or configuration is ``best''.
+
+\textbf{Why it matters.} A correct answer can come from a poor process: the model may recall the answer from pretraining and ignore the evidence, cite documents that do not support it, or succeed by luck on one sampled run. A wrong answer can come from a sound search that failed at the last step. If outcome-only evaluation hides these cases, leaderboards, model selection and outcome-only reinforcement-learning rewards (e.g., Search-R1~\cite{jin2025searchr1}) optimize a signal that does not reflect agent quality. Trajectory-aware evaluation could make agents more \emph{reliable} (it detects run-to-run instability), \emph{safer} (it detects ungrounded answers) and more \emph{interpretable} (it locates failures). However, trajectory evaluators, especially LLM judges, have their own biases and costs, so switching to them is not obviously an improvement.
+
+\textbf{Broader context.} The project sits in \emph{evaluation and benchmarking of generative-AI agents}, which overlaps with \emph{alignment/safety} (grounded, faithful answers) and with \emph{LLM-as-a-judge validity}. Recent surveys and benchmarks argue that outcome-only evaluation is insufficient~\cite{yehudai2025survey,chen2026trace}, but there is little evidence of \emph{how often} it misleads and \emph{for which decisions}, especially for small open-weight models.
+
+\textbf{Planned study.} I will build a ReAct-style~\cite{yao2023react} research-assistant agent (search $\rightarrow$ read $\rightarrow$ reason $\rightarrow$ answer with citations) over a frozen, BM25-indexed HotpotQA~\cite{yang2018hotpotqa} paragraph corpus, which provides gold supporting evidence for every question. It runs on open-weight Qwen3 models (1.7B, 4B, 8B; thinking on/off) on Kaggle's free GPUs, over 400 multi-hop questions $\times$ 3 seeds, with closed-book and single-retrieval baselines. Every trajectory is scored three ways: (A) outcome-only, (B) trajectory-aware (gold-evidence recall, citation grounding, redundant calls, step-level LLM judge), and (C) blinded human scoring of a stratified subset of 150 trajectories, with reliability checks.
+
+\textbf{Impact.} \emph{Scientific:} measured disagreement rates, with confidence intervals, between outcome, process and human evaluation in one controlled setting. \emph{Practical:} which cheap automatic signal best predicts human judgment per unit of compute, and whether configuration rankings change. \emph{Community:} a reproducible, public set of trajectories, judge outputs and human labels built on free compute.
+
+\section{Background / Literature Review}
+
+\textbf{Yehudai et al., Survey on Evaluation of LLM-based Agents~\cite{yehudai2025survey}.} Organizes agent evaluation into capability, application and generalist benchmarks, distinguishes reference-based from reference-free trajectory assessment (a clear taxonomy I use for positioning), and lists cost-efficiency, robustness, and fine-grained, scalable evaluation as open gaps. \limn it identifies gaps but does not measure how much outcome-only scores mislead.
+
+\textbf{Kapoor et al., AI Agents That Matter~\cite{kapoor2024agents}, and HAL~\cite{kapoor2025hal}.} The first paper shows that accuracy-only leaderboards reward expensive agents, proposes cost-controlled evaluation with accuracy--cost Pareto frontiers, and finds that simple baselines often match complex agents. HAL scales this to 21,730 rollouts (9 models, 9 benchmarks), finds that higher reasoning effort \emph{reduced} accuracy in most runs, and uses LLM-aided log inspection to reveal unreported behaviors, such as agents looking up a benchmark's answers online. I value the evaluation hygiene and the released logs. \limn both still use task success as the quality measure; logs are inspected qualitatively, not scored, and never validated against human judgment.
+
+\textbf{TRACE~\cite{chen2026trace}.} Names the ``high-score illusion'' of Pass@1 for deep-research agents. It proposes a hierarchical trajectory utility (efficiency, evidence grounding) and measures latent capability as the minimum guidance an agent needs to succeed. It is the closest prior work to this project and shows that trajectory-aware rankings expose trade-offs that accuracy alone hides. \limn it introduces a new evaluator but does not test it against human judgment, measure the evaluator's own bias and reliability, or check how stable results are across repeated runs.
+
+\textbf{AgentProcessBench~\cite{fan2026agentprocessbench}.} Provides 1,000 tool-use trajectories with 8,509 human step labels (+1/0/$-$1, 89.1\% inter-annotator agreement) for evaluating step-level process judges. Weak policies show \emph{inflated} correct-step ratios because they stop early, and process signals complement outcome supervision in test-time scaling. I reuse its ternary labels. \limn it evaluates judges, not how process and outcome scores disagree on the \emph{same} agent runs, or whether that disagreement changes system rankings.
+
+\textbf{TRAIL~\cite{deshpande2025trail} and MAST~\cite{cemri2025mast}.} Both build error taxonomies for agent traces. TRAIL annotates 148 GAIA/SWE-bench traces (841 errors, more than 20 error types); MAST derives 14 multi-agent failure modes through grounded theory ($\kappa=0.88$) and validates an LLM annotator against them. Their annotation methodology is rigorous. \limn it is expensive (TRAIL reports about 110 minutes per trace; MAST used six expert annotators), which makes human trajectory evaluation hard to scale, and neither measures how outcome-only scores relate to the labeled failures.
+
+\textbf{Zheng et al., Judging LLM-as-a-Judge~\cite{zheng2023judging}.} Shows that strong LLM judges agree with humans about as often as humans agree with each other. It also documents position bias (GPT-4 was consistent under answer-order swap only about 65\% of the time), verbosity bias and self-enhancement bias, and proposes mitigations such as position swapping and reference-guided judging. \limn it covers single-turn chat; whether these biases carry over to long trajectories judged by small open-weight models is untested, yet most trajectory evaluators~\cite{zhuge2024agentjudge,lu2025agentrewardbench} are LLM judges.
+
+\textbf{Yao et al., $\tau$-bench~\cite{yao2024taubench}.} Introduces pass$^k$, the probability that all $k$ independent runs succeed, and shows that GPT-4o falls from over 60\% pass$^1$ to under 25\% pass$^8$. This exposes unreliability that single-run accuracy hides, and the metric is simple and clear. \limn pass$^k$ is still outcome-only: it shows \emph{that} runs diverge but not \emph{why}. Explaining the divergence requires trajectory logs.
+
+\textbf{Jin et al., Search-R1~\cite{jin2025searchr1}.} Trains Qwen2.5 search agents with reinforcement learning against a local Wikipedia retriever on seven QA datasets, rewarded only by exact-match accuracy of the final answer. Its reproducible local-retrieval setup is one I reuse. \limn its outcome-only reward is exactly the assumption this project tests; its datasets are likely in the pretraining data, and outcome reward cannot tell retrieved answers from memorized ones.
+
+\textbf{Gap.} Prior work agrees that outcome-only evaluation is insufficient and proposes many trajectory evaluators. Missing is a controlled study that applies outcome, trajectory and human evaluation to the \emph{same} trajectories, measures \emph{how often and in which direction} they disagree, checks whether rankings change at matched cost, and reports each evaluator's reliability and cost, with small open-weight models and a closed-book contamination control.
+
+\section{Research Question}
+
+\textbf{Main question:} \emph{On identical agent trajectories, how much do outcome-only and trajectory-aware evaluations disagree, does that disagreement change which agent configuration is judged best, and which automatic evaluator best tracks human judgment per unit of cost?} The question splits into four testable sub-questions, whose hypotheses I will pre-register before the full runs:
+\begin{itemize}
+  \item \textbf{RQ1 (disagreement).} How often does an agent give the \emph{right answer with a bad process} (correct but not grounded in the gold evidence), and how often the \emph{wrong answer with a good process}? \emph{H1:} at least 10\% of correct answers are not grounded in the evidence. These cases are explained mainly by memorized knowledge (tested against closed-book accuracy on the same questions) and become less common as model size grows. \emph{Measure:} a 2$\times$2 table of answer correctness against evidence grounding for each configuration.
+  \item \textbf{RQ2 (ranking stability).} Do outcome-based, trajectory-based and human evaluation rank the 6 agent configurations the same way? \emph{H2:} the outcome-based and human rankings differ (Kendall $\tau<0.8$, bootstrap CIs) when configurations are compared at matched token cost~\cite{kapoor2024agents}.
+  \item \textbf{RQ3 (evaluator validity).} Which automatic metric best predicts human trajectory scores, and at what cost? \emph{H3:} simple rule-based metrics, such as gold-evidence recall and redundant-call count, correlate with human scores (Spearman $\rho$) at least as well as an LLM step judge. The LLM judges also show measurable position, verbosity and self-preference bias on trajectories~\cite{zheng2023judging}.
+  \item \textbf{RQ4 (reliability).} How much does single-run accuracy overstate reliability? \emph{H4:} pass$^3$ is less than 70\% of pass$^1$ for every configuration~\cite{yao2024taubench}. Comparing trajectories from different seeds identifies where runs diverge: query choice, parse failures, or stopping too early.
+\end{itemize}
+An optional RQ5 (do trajectory metrics catch degradation under injected tool errors that outcome metrics miss?) runs only if RQ1--RQ4 are done by week~9; the minimum deliverable is RQ1 and RQ4 on the 4B model.
+
+\textbf{Why it is worth answering / gap filled.} Each sub-question turns an accepted claim, ``final-answer accuracy is not enough,'' into an effect size with a confidence interval and a decision-level consequence, which is the missing measurement identified in Section~2. The design makes every hypothesis falsifiable: 400 paired questions, 3 seeds, a closed-book contamination control, separate tagging of parse failures and reasoning failures, and a human baseline with reported reliability (script-enforced blinding, intra-rater re-test on 30 trajectories, external second rater on 40 for Cohen's $\kappa$). Hypotheses that turn out wrong will be reported as wrong. \textbf{Who benefits:} benchmark designers deciding whether to report process metrics; practitioners picking models from leaderboards; researchers training agents with outcome-only rewards~\cite{jin2025searchr1}; and builders of LLM judges, who get a cost--validity comparison.
+
+\clearpage
+\renewcommand{\refname}{\normalsize References}
+\begin{thebibliography}{99}\small\setlength{\itemsep}{0pt}
+\bibitem{yehudai2025survey} A.~Yehudai, L.~Eden, A.~Li, G.~Uziel, Y.~Zhao, R.~Bar-Haim, A.~Cohan, and M.~Shmueli-Scheuer. Survey on evaluation of LLM-based agents. \emph{Findings of ACL}, 2026. arXiv:2503.16416.
+\bibitem{kapoor2024agents} S.~Kapoor, B.~Stroebl, Z.~S.~Siegel, N.~Nadgir, and A.~Narayanan. AI agents that matter. \emph{Transactions on Machine Learning Research}, 2025. arXiv:2407.01502.
+\bibitem{kapoor2025hal} S.~Kapoor, B.~Stroebl, P.~Kirgis, N.~Nadgir, Z.~S.~Siegel, et al. Holistic Agent Leaderboard: The missing infrastructure for AI agent evaluation. \emph{ICLR}, 2026. arXiv:2510.11977.
+\bibitem{chen2026trace} Y.~Chen, J.~Jiang, J.~Liu, Y.~Zhang, X.~Guo, and I.~King. TRACE: Trajectory-aware comprehensive evaluation for deep research agents. arXiv:2602.21230, 2026.
+\bibitem{fan2026agentprocessbench} S.~Fan, X.~Ye, Y.~Huo, Z.-Y.~Chen, Y.~Guo, S.~Yang, W.~Yang, S.~Ye, et al. AgentProcessBench: Diagnosing step-level process quality in tool-using agents. arXiv:2603.14465, 2026.
+\bibitem{deshpande2025trail} D.~Deshpande, V.~Gangal, H.~Mehta, J.~Krishnan, A.~Kannappan, and R.~Qian. TRAIL: Trace reasoning and agentic issue localization. arXiv:2505.08638, 2025.
+\bibitem{cemri2025mast} M.~Cemri, M.~Z.~Pan, S.~Yang, L.~A.~Agrawal, B.~Chopra, R.~Tiwari, K.~Keutzer, A.~Parameswaran, et al. Why do multi-agent LLM systems fail? \emph{NeurIPS}, 2025. arXiv:2503.13657.
+\bibitem{zheng2023judging} L.~Zheng, W.-L.~Chiang, Y.~Sheng, S.~Zhuang, Z.~Wu, Y.~Zhuang, Z.~Lin, Z.~Li, et al. Judging LLM-as-a-judge with MT-Bench and Chatbot Arena. \emph{NeurIPS Datasets and Benchmarks}, 2023. arXiv:2306.05685.
+\bibitem{zhuge2024agentjudge} M.~Zhuge, C.~Zhao, D.~Ashley, W.~Wang, D.~Khizbullin, Y.~Xiong, Z.~Liu, E.~Chang, et al. Agent-as-a-Judge: Evaluate agents with agents. arXiv:2410.10934, 2024.
+\bibitem{lu2025agentrewardbench} X.~H.~L\`u, A.~Kazemnejad, N.~Meade, A.~Patel, D.~Shin, A.~Zambrano, K.~Sta\'nczak, P.~Shaw, et al. AgentRewardBench: Evaluating automatic evaluations of web agent trajectories. arXiv:2504.08942, 2025.
+\bibitem{yao2024taubench} S.~Yao, N.~Shinn, P.~Razavi, and K.~Narasimhan. $\tau$-bench: A benchmark for tool-agent-user interaction in real-world domains. arXiv:2406.12045, 2024.
+\bibitem{jin2025searchr1} B.~Jin, H.~Zeng, Z.~Yue, J.~Yoon, S.~Arik, D.~Wang, H.~Zamani, and J.~Han. Search-R1: Training LLMs to reason and leverage search engines with reinforcement learning. arXiv:2503.09516, 2025.
+\bibitem{yao2023react} S.~Yao, J.~Zhao, D.~Yu, N.~Du, I.~Shafran, K.~Narasimhan, and Y.~Cao. ReAct: Synergizing reasoning and acting in language models. \emph{ICLR}, 2023.
+\bibitem{yang2018hotpotqa} Z.~Yang, P.~Qi, S.~Zhang, Y.~Bengio, W.~W.~Cohen, R.~Salakhutdinov, and C.~D.~Manning. HotpotQA: A dataset for diverse, explainable multi-hop question answering. \emph{EMNLP}, 2018.
+\end{thebibliography}
+
+\end{document}
