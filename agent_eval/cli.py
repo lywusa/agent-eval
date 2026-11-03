@@ -168,6 +168,9 @@ def cmd_annotate(a: argparse.Namespace) -> None:
         n = A.import_sheet(a.batch_dir, a.sheet, a.annotator)
         print(f"[annotate] imported {n} rows")
     elif a.action == "status":
+        if not Path(a.out).is_dir():
+            print(f"[annotate] no annotation directory at {a.out} yet")
+            return
         h = A.load_human_labels(a.out)
         for bdir in sorted(Path(a.out).iterdir()):
             if (bdir / "items.jsonl").exists():
