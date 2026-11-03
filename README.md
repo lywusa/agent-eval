@@ -64,7 +64,7 @@ Repository layout:
 
 ```
 agent_eval/        package (see table above)
-kaggle/            notebook scripts for the three Kaggle stages (data, policy runs, judges)
+kaggle/            notebook scripts: 01 data (CPU), 02 policy runs (GPU), 03 judges (GPU), 04 score/annotate/analyze (CPU)
 prereg/            PREREGISTRATION.md (week 3) and GATE.md (week 9) templates
 annotation/        RUBRIC.md (+ batches created by `agent-eval annotate`, git-ignored until done)
 tests/             unit + end-to-end tests
@@ -280,6 +280,18 @@ Upload `data/`, `runs/`, `judge/` and the annotation batches (`git add -f annota
 ---
 
 ## Kaggle notes
+
+Every step can run on Kaggle. Only the policy runs and judges use GPU quota:
+
+| Stage | Notebook script | Accelerator | Output Dataset |
+|---|---|---|---|
+| Data, BM25 index, question samples | `kaggle/01_build_data.py` | None (CPU) | `agent-eval-data` |
+| Throughput bench, pilot, main runs, RQ5 / pass^5 optionals | `kaggle/02_policy_runs.py` (one model per session) | GPU T4 x2 | `agent-eval-runs` |
+| LLM judges | `kaggle/03_judges.py` | GPU T4 x2 | `agent-eval-judge` |
+| Scoring, annotation export/import, analysis and report | `kaggle/04_score_annotate_analyze.py` | None (CPU) | download `results/` |
+| Human labelling | offline: `trajectories.html` + `sheet.csv`, imported in 04 | none | `agent-eval-annotation` |
+
+The terminal labeler (`annotate label`) also works in an interactive Kaggle CPU session, but files in `/kaggle/working` disappear when an interactive session ends. Save a version, or download the labels, after every sitting. Labelling offline in the spreadsheet is less fragile.
 
 - **Getting the code into Kaggle.** The notebooks `git clone` this repo. If the repo is private, upload a zip of the repo as a Kaggle Dataset (`agent-eval-code`) instead and run `pip install -e /kaggle/input/agent-eval-code/...`.
 - **Hardware.** Use **GPU T4 x2**; vLLM does not support the P100 (sm_60). T4 has no bf16, so everything runs in fp16 or AWQ. Quota is about 30 GPU-hours per week with a 12-hour session cap.
