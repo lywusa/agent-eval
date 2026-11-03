@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-eval"
+version = "0.1.0"
+description = "Outcome-only vs. trajectory-aware vs. human evaluation of a ReAct research-assistant agent (Qwen3, HotpotQA, Kaggle)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "pyarrow>=12",
+]
+
+[project.optional-dependencies]
+gpu = ["vllm>=0.8.5", "transformers>=4.51"]
+hf = ["transformers>=4.51", "torch", "accelerate"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+agent-eval = "agent_eval.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["agent_eval*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
