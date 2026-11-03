@@ -1,3 +1,22 @@
 proposal/*.aux
 proposal/*.log
 proposal/*.out
+
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Large or regenerated artifacts: keep them as Kaggle Datasets, not in git.
+data/
+runs/
+pilot_runs/
+judge/
+smoke/
+fake/
+results/scores.csv
+
+# Annotation batches are committed only after all labelling is finished
+# (keeps key.csv out of sight while annotating). RUBRIC.md is tracked.
+annotation/*/
