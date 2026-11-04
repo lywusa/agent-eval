@@ -68,6 +68,7 @@ kaggle/            notebook scripts: 01 data (CPU), 02 policy runs (GPU), 03 jud
 prereg/            PREREGISTRATION.md (week 3) and GATE.md (week 9) templates
 annotation/        RUBRIC.md (+ batches created by `agent-eval annotate`, git-ignored until done)
 tests/             unit + end-to-end tests
+presentation/      week-2 progress deck with speaker notes; rebuild with `python3 presentation/build_deck.py`
 RESEARCH_PLAN.md   full semester plan;  proposal/  course proposal
 ```
 
@@ -86,7 +87,7 @@ cat data/manifest.json
 - This downloads the HotpotQA dev distractor set. If the official CMU host is down, it falls back to the identical Hugging Face parquet. A local file also works: `--hotpot path/to/hotpot_dev_distractor_v1.json`.
 - It writes `corpus.jsonl` (66,581 deduplicated paragraphs), `bm25.pkl`, `questions_all.jsonl`, `questions_eval.jsonl` (400, seed 2026), `questions_pilot.jsonl` (50, disjoint) and `manifest.json` with SHA fingerprints of both samples.
 - On Kaggle, run `kaggle/01_build_data.py` (CPU session) and save `/kaggle/working/data` as the Dataset **`agent-eval-data`**.
-- Sanity check from development: querying BM25 with the raw question puts at least one gold paragraph in the top 5 for ~93% of eval questions, and both for ~72%. The second hop really requires searching.
+- Sanity check from development: querying BM25 with the raw question puts at least one gold paragraph in the top 5 for ~93% of eval questions, but both for only ~51% (~48% of bridge questions; mean gold recall@5 ≈ 0.72). The second hop really requires searching.
 
 ### Week 2: measure throughput and confirm the agent on GPU
 
