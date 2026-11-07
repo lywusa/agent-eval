@@ -56,3 +56,17 @@
 
 8B, no thinking:
 
+{'model': 'qwen3-8b', 'thinking': False, 'batch': 1, 'completion_tokens': 256, 'seconds': 30.27, 'tok_per_s': 8.5}
+{'model': 'qwen3-8b', 'thinking': False, 'batch': 16, 'completion_tokens': 4085, 'seconds': 12.87, 'tok_per_s': 317.4}
+{'model': 'qwen3-8b', 'thinking': False, 'batch': 64, 'completion_tokens': 16324, 'seconds': 23.15, 'tok_per_s': 705.2}
+{
+  "best_tok_per_s": 705.2,
+  "react_tokens": 28800000,
+  "baseline_tokens": 2160000,
+  "react_gpu_hours": 11.344299489506522,
+  "baseline_gpu_hours": 0.8508224617129893
+}
+
+
+8B, thinking:
+
