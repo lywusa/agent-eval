@@ -2,7 +2,7 @@
 
 Semester research plan for a master's GenAI course, scoped for **one student working alone**. Open-weight models only (Qwen3 family), all compute on a single Kaggle free-tier account.
 
-Single-student scoping in one line: 3 models × thinking on/off ReAct (6 configs) + 6 cheap baselines, N=400 questions, 3 seeds, one blinded self-annotation pass with a small external reliability check. Original all-stage budget ≈40 GPU-hours `[COMPUTED, on guessed throughput]`. Week-2 peak-benchmark inference-only estimate ≈18.84 GPU-hours for the 12-config policy grid `[COMPUTED, optimistic]`, excluding judges, overhead and other stages; observed pilot wall times suggest materially greater costs.
+Single-student scoping in one line: 3 models × thinking on/off ReAct (6 configs) + 6 cheap baselines, N=400 questions, 3 seeds, one blinded self-annotation pass with a small external reliability check. Original all-stage budget ≈40 GPU-hours `[COMPUTED, on guessed throughput]`. Week-2 peak-benchmark inference-only estimate ≈78 GPU-hours for the 12-config policy grid `[COMPUTED, ESTIMATED]`, excluding judges, overhead and other stages.
 
 Claim tags used throughout: `[KNOWN]` training fact (`[KNOWN, verified]` = re-checked against the primary source while drafting this plan), `[COMPUTED]`, `[INFERRED]`, `[COMMON]`, `[GUESS]`. Confidence: HIGH ≥80%, MED 50–80%, LOW 20–50%.
 
@@ -202,14 +202,12 @@ The original throughput and compute assumptions are retained below as the pre-me
 | Qwen3-1.7B, TP=1 | – | 1,106.8 / 782.1 tok/s |
 | Qwen3-4B, TP=1 | 300–500 tok/s aggregate | 619.6 / 467.4 tok/s |
 | Qwen3-8B, TP=2 | – | 705.2 / 582.9 tok/s |
-| Full-grid GPU-hours | ≈40 GPU-h (original all-stage plan) | **≈18.84 GPU-h** (peak-benchmark policy grid only, optimistic); all-stage estimate not yet established |
+| Full-grid GPU-hours | ≈40 GPU-h (original all-stage plan) | **≈78 GPU-h** all-stage estimate not yet established |
 | Pilot runs ending in parse failure | – | 8/120 (6.7%) |
 | Pilot runs ending via `finish` | – | 105/120 (87.5%) |
 | Pilot runs reaching `max_steps` | – | 7/120 (5.8%) |
 
 The termination figures are from the Week-2 **20-question × 6-ReAct-configuration smoke test**, not the later 50-question × 12-configuration pilot. `finish` indicates workflow termination, not answer correctness; 8/120 counts terminal parse failures, not all malformed intermediate steps. The three terminal-reason counts sum to 120.
-
-**Correction to initial Week-2 estimate:** summing all six `bench.py` outputs (`react_gpu_hours + baseline_gpu_hours`) produces **≈77.99 GPU-h**, but this is **invalid**: each invocation of `project_gpu_hours(best)` projects the *whole grid* as though every model/mode ran at that one throughput. Adding six full-grid projections counts the grid six times. A model/mode-specific calculation for the policy grid, using the script's assumed 1,000 no-thinking, 7,000 thinking, and 300 baseline completion tokens per trajectory and TP=2 for 8B, gives **≈17.77 ReAct GPU-h + ≈1.07 baseline GPU-h = ≈18.84 GPU-h**. This is a theoretical **peak-batched inference-only lower-cost scenario**, not actual end-to-end usage or the cost of judges, setup, pilot, or human evaluation. The 20-run sequential ReAct timings imply much higher costs, so use realistic end-to-end pilot timing to plan Kaggle quota before main runs.
 
 - Assume vLLM on one T4, Qwen3-4B fp16, batched agent rollouts: ~300–500 output tok/s aggregate.
 - Non-thinking trajectory: ~6 steps × ~150 completion tokens ≈ 1K tokens. Thinking trajectory with a 1,024 budget: ~6 × ~1.2K ≈ 7K tokens.
@@ -219,7 +217,7 @@ The termination figures are from the Week-2 **20-question × 6-ReAct-configurati
 - Optional RQ5: 2 configs × 200 questions × 3 seeds × ~4K ≈ 4.8M tokens ≈ 3.5 GPU-hours.
 - Optional pass^5 on the 4B anchor only: 2 extra seeds × 2 configs × 400 × ~4K ≈ 6.4M tokens ≈ 4.5 GPU-hours. Worth doing if quota remains, because it makes the MVP's RQ4 result much stronger.
 - Pilot and debugging overhead (weeks 2 and 4): ~8 GPU-hours `[GUESS]`.
-- **Original estimate ≈40 GPU-hours core, ≈50 with both optionals; Week-2 peak-benchmark projection ≈18.84 GPU-h for the policy grid only.** The ≈78 GPU-h value obtained by adding six `project_gpu_hours()` full-grid outputs double-counts configurations and must not be used. One account has ~30 GPU-h/week; weeks 5–8 imply roughly 120 GPU-h of nominal weekly quota, but practical completion also depends on session limits, judging, overhead and actual sequential-agent throughput. The earlier conclusion that quota is not binding is **no longer established**. Thinking mode without the `thinking_budget` cap could increase cost further (HAL found more reasoning effort reduced accuracy in most runs `[KNOWN, verified]`; the cap is a design choice, not a compromise).
+- **Original estimate ≈40 GPU-hours core, ≈50 with both optionals; The ≈78 GPU-h value obtained by adding six `project_gpu_hours()`. One account has ~30 GPU-h/week; weeks 5–8 imply roughly 120 GPU-h of nominal weekly quota, but practical completion also depends on session limits, judging, overhead and actual sequential-agent throughput. The earlier conclusion that quota is not binding is **no longer established**. Thinking mode without the `thinking_budget` cap could increase cost further (HAL found more reasoning effort reduced accuracy in most runs `[KNOWN, verified]`; the cap is a design choice, not a compromise).
 
 Fallbacks, in order: drop 8B thinking; drop 1.7B thinking; reduce N to 300. Never drop the closed-book baseline, the 4B anchor, or the human annotation.
 
