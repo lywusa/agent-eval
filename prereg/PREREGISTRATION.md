@@ -6,10 +6,15 @@ append changes to section 7.
 
 - Date: [YYYY-MM-DD]
 - Git commit of the code used for all main runs: [sha]
-- `data/manifest.json` `eval_fingerprint`: [16 hex chars] (400 questions, seed 2026, 320 bridge / 80 comparison)
-- `data/manifest.json` `pilot_fingerprint`: [16 hex chars] (50 disjoint pilot questions)
+- `data/manifest.json` `eval_fingerprint`: `2939bc3d80b8980e` (400 questions, seed 2026, 320 bridge / 80 comparison)
+- `data/manifest.json` `pilot_fingerprint`: `dc5906e0740e8780` (50 disjoint pilot questions)
 - Model family decision: Qwen3-2504 hybrid checkpoints (not Qwen3.5)
-- Measured throughput (week 2, `agent-eval bench`): 1.7B [..] tok/s, 4B [..] tok/s, 8B [..] tok/s
+- Measured throughput (week 2, `agent-eval bench`; peak aggregate completion tok/s, batch size 64; NT/T = no-thinking/thinking):
+  - Qwen3-1.7B (TP=1): **1,106.8 / 782.1** tok/s (NT/T)
+  - Qwen3-4B (TP=1): **619.6 / 467.4** tok/s (NT/T)
+  - Qwen3-8B (TP=2): **705.2 / 582.9** tok/s (NT/T)
+- GPU-hours: original **≈40 GPU-h** all-stage guess. Week-2 benchmark-based **≈18.84 GPU-h** projected for the 12-config policy grid only (≈17.77 ReAct + ≈1.07 baseline, using per-model NT/T peak tok/s and TP=2 for 8B). This is an optimistic batched-generation estimate, **not actual end-to-end usage**, and excludes judges, pilot/setup, and session overhead. The previously reported **≈78 GPU-h** was obtained by adding six per-benchmark *whole-grid* projections from `project_gpu_hours()` and is **not valid** because it counts the grid six times. Reassess with pilot wall times before main runs.
+- Week-2 ReAct smoke test (20 pilot questions × 6 configs = 120 trajectories): terminal parse failures **8/120 (6.7%)**; terminated by `finish` **105/120 (87.5%)**; `max_steps` budget hits **7/120 (5.8%)**. These are termination outcomes, not answer-accuracy metrics; later Week-4 pilot uses 50 questions and also includes baselines.
 
 ## 1. Research questions and hypotheses
 
