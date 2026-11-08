@@ -15,7 +15,7 @@ append changes to section 7.
   - Qwen3-8B (TP=2): **705.2 / 582.9** tok/s (NT/T)
 - GPU-hours: original **≈40 GPU-h** all-stage guess. Week-2 benchmark-based **≈78 GPU-h** projected for the 12-config policy grid only. This is an batched-generation estimate based on pilot runs, **not actual end-to-end usage**, and excludes judges, pilot/setup, and session overhead. 
 - Week-2 ReAct smoke test (20 pilot questions × 6 configs = 120 trajectories): terminal parse failures **8/120 (6.7%)**; terminated by `finish` **105/120 (87.5%)**; `max_steps` budget hits **7/120 (5.8%)**. These are termination outcomes, not answer-accuracy metrics; later Week-4 pilot uses 50 questions and also includes baselines.
-
+- Week-3 synthetic analysis smoke test: agent-eval synth, score, and analyze produced fake/results/report.md (generated 2026-11-07 18:14 UTC), covering H1a/H1a-mech/H1b/H2/H3a/H3b/H4, additional optional H5 diagnostics, scoring tables, reliability statistics, and figure references. The report contains 2,520 synthetic trajectories across 14 configurations and 60 fake questions; all numeric findings and apparent hypothesis support are artificial and must not be reported as empirical results. This confirms report generation, not independent validation of metric formulas or successful rendering of every figure.
 ## 1. Research questions and hypotheses
 
 | ID | Hypothesis | Test | Decision rule |
